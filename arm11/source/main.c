@@ -31,144 +31,143 @@
 
 #include "types.h"
 #include "memory.h"
+#include "hw_registers.h"
+
 
 void prepareForFirmlaunch(void);
 extern u32 prepareForFirmlaunchSize;
-
 extern volatile Arm11Operation operation;
 
 static void initScreens(u32 brightnessLevel, struct fb *fbs)
 {
-    *(vu32 *)0x10141200 = 0x1007F;
+    REG_PDN_GPU_CNT = DISP_SUB_CONFIG_INIT;
+    REG_LCD_FILL_TOP = LCD_FILL_BLACK; // Hide potential boot garbage
+    REG_LCD_FILL_BOTTOM = LCD_FILL_BLACK;
 
-    *(vu32 *)0x10202204 = 0x01000000; //set LCD fill black to hide potential garbage -- NFIRM does it before firmlaunching
-    *(vu32 *)0x10202A04 = 0x01000000;
+    REG_MASTER_LCD = MASTER_LCD_ENABLE;
+    REG_LCD_TIMING_MASK &= LCD_TIME_SYNC_MASK;
+    REG_BL_BRIGHTNESS_TOP = brightnessLevel;
+    REG_BL_BRIGHTNESS_BOT = brightnessLevel;
+    REG_BACKLIGHT_TOP = BL_POWER;
+    REG_BACKLIGHT_BOT = BL_POWER;
 
-    *(vu32 *)0x10202014 = 0x00000001;
-    *(vu32 *)0x1020200C &= 0xFFFEFFFE;
-    *(vu32 *)0x10202240 = brightnessLevel;
-    *(vu32 *)0x10202A40 = brightnessLevel;
-    *(vu32 *)0x10202244 = 0x1023E;
-    *(vu32 *)0x10202A44 = 0x1023E;
+    // Top screen geometry & timings
+    REG_TOP_PPU(PPU_OFF_TIMING_00) = TOP_TIMING_00;
+    REG_TOP_PPU(PPU_OFF_TIMING_04) = TOP_TIMING_04;
+    REG_TOP_PPU(PPU_OFF_TIMING_08) = TOP_TIMING_08;
+    REG_TOP_PPU(PPU_OFF_TIMING_0C) = TOP_TIMING_0C;
+    REG_TOP_PPU(PPU_OFF_TIMING_10) = TOP_TIMING_10;
+    REG_TOP_PPU(PPU_OFF_TIMING_14) = TOP_TIMING_14;
+    REG_TOP_PPU(PPU_OFF_TIMING_18) = TOP_TIMING_18;
+    REG_TOP_PPU(PPU_OFF_TIMING_1C) = TOP_TIMING_1C;
+    REG_TOP_PPU(PPU_OFF_TIMING_20) = TOP_TIMING_20;
+    REG_TOP_PPU(PPU_OFF_TIMING_24) = TOP_TIMING_24;
+    REG_TOP_PPU(PPU_OFF_TIMING_28) = TOP_TIMING_28;
+    REG_TOP_PPU(PPU_OFF_TIMING_2C) = TOP_TIMING_2C;
+    REG_TOP_PPU(PPU_OFF_TIMING_30) = TOP_TIMING_30;
+    REG_TOP_PPU(PPU_OFF_TIMING_34) = TOP_TIMING_34;
+    REG_TOP_PPU(PPU_OFF_TIMING_38) = TOP_TIMING_38;
+    REG_TOP_PPU(PPU_OFF_TIMING_3C) = TOP_TIMING_3C;
+    REG_TOP_PPU(PPU_OFF_TIMING_40) = TOP_TIMING_40;
+    REG_TOP_PPU(PPU_OFF_TIMING_44) = TOP_TIMING_44;
+    REG_TOP_PPU(PPU_OFF_TIMING_48) = TOP_TIMING_48;
+    REG_TOP_PPU(PPU_OFF_CONFIG_5C) = TOP_CFG_5C;
+    REG_TOP_PPU(PPU_OFF_CONFIG_60) = TOP_CFG_60;
+    REG_TOP_PPU(PPU_OFF_CONFIG_64) = TOP_CFG_64;
 
-    //Top screen
-    *(vu32 *)0x10400400 = 0x000001c2;
-    *(vu32 *)0x10400404 = 0x000000d1;
-    *(vu32 *)0x10400408 = 0x000001c1;
-    *(vu32 *)0x1040040c = 0x000001c1;
-    *(vu32 *)0x10400410 = 0x00000000;
-    *(vu32 *)0x10400414 = 0x000000cf;
-    *(vu32 *)0x10400418 = 0x000000d1;
-    *(vu32 *)0x1040041c = 0x01c501c1;
-    *(vu32 *)0x10400420 = 0x00010000;
-    *(vu32 *)0x10400424 = 0x0000019d;
-    *(vu32 *)0x10400428 = 0x00000002;
-    *(vu32 *)0x1040042c = 0x00000192;
-    *(vu32 *)0x10400430 = 0x00000192;
-    *(vu32 *)0x10400434 = 0x00000192;
-    *(vu32 *)0x10400438 = 0x00000001;
-    *(vu32 *)0x1040043c = 0x00000002;
-    *(vu32 *)0x10400440 = 0x01960192;
-    *(vu32 *)0x10400444 = 0x00000000;
-    *(vu32 *)0x10400448 = 0x00000000;
-    *(vu32 *)0x1040045C = 0x00f00190;
-    *(vu32 *)0x10400460 = 0x01c100d1;
-    *(vu32 *)0x10400464 = 0x01920002;
-    *(vu32 *)0x10400468 = (u32)fbs[0].top_left;
-    *(vu32 *)0x1040046C = (u32)fbs[1].top_left;
-    *(vu32 *)0x10400470 = 0x80341;
-    *(vu32 *)0x10400474 = 0x00010501;
-    *(vu32 *)0x10400478 = 0;
-    *(vu32 *)0x10400494 = (u32)fbs[0].top_right;
-    *(vu32 *)0x10400498 = (u32)fbs[1].top_right;
-    *(vu32 *)0x10400490 = 0x000002D0;
-    *(vu32 *)0x1040049C = 0x00000000;
+    REG_TOP_FB_LEFT_0   = (u32)fbs[0].top_left;
+    REG_TOP_FB_LEFT_1   = (u32)fbs[1].top_left;
+    REG_TOP_FB_FORMAT   = LCD_FORMAT_TOP;
+    REG_TOP_PPU(PPU_OFF_CONFIG_74) = PPU_BURST_CONFIG;
+    REG_TOP_FB_SELECT   = 0;
+    REG_TOP_FB_RIGHT_0  = (u32)fbs[0].top_right;
+    REG_TOP_FB_RIGHT_1  = (u32)fbs[1].top_right;
+    REG_TOP_STRIDE      = LCD_STRIDE_VALUE;
+    REG_TOP_PPU(PPU_OFF_CONFIG_9C) = 0x00000000;
 
-    // Color LUT
-    *(vu32 *)0x10400480 = 0;
+    // Top Color LUT
+    REG_TOP_LUT_CNT = 0;
     for(u32 i = 0; i < 256; i++)
-        *(vu32 *)0x10400484 = 0x10101 * i;
+        REG_TOP_LUT_DATA = 0x10101 * i;
 
-    //Bottom screen
-    *(vu32 *)0x10400500 = 0x000001c2;
-    *(vu32 *)0x10400504 = 0x000000d1;
-    *(vu32 *)0x10400508 = 0x000001c1;
-    *(vu32 *)0x1040050c = 0x000001c1;
-    *(vu32 *)0x10400510 = 0x000000cd;
-    *(vu32 *)0x10400514 = 0x000000cf;
-    *(vu32 *)0x10400518 = 0x000000d1;
-    *(vu32 *)0x1040051c = 0x01c501c1;
-    *(vu32 *)0x10400520 = 0x00010000;
-    *(vu32 *)0x10400524 = 0x0000019d;
-    *(vu32 *)0x10400528 = 0x00000052;
-    *(vu32 *)0x1040052c = 0x00000192;
-    *(vu32 *)0x10400530 = 0x00000192;
-    *(vu32 *)0x10400534 = 0x0000004f;
-    *(vu32 *)0x10400538 = 0x00000050;
-    *(vu32 *)0x1040053c = 0x00000052;
-    *(vu32 *)0x10400540 = 0x01980194;
-    *(vu32 *)0x10400544 = 0x00000000;
-    *(vu32 *)0x10400548 = 0x00000011;
-    *(vu32 *)0x1040055C = 0x00f00140;
-    *(vu32 *)0x10400560 = 0x01c100d1;
-    *(vu32 *)0x10400564 = 0x01920052;
-    *(vu32 *)0x10400568 = (u32)fbs[0].bottom;
-    *(vu32 *)0x1040056C = (u32)fbs[1].bottom;
-    *(vu32 *)0x10400570 = 0x80301;
-    *(vu32 *)0x10400574 = 0x00010501;
-    *(vu32 *)0x10400578 = 0;
-    *(vu32 *)0x10400590 = 0x000002D0;
-    *(vu32 *)0x1040059C = 0x00000000;
+    // Bottom screen geometry & timings
+    REG_BOT_PPU(PPU_OFF_TIMING_00) = BOT_TIMING_00;
+    REG_BOT_PPU(PPU_OFF_TIMING_04) = BOT_TIMING_04;
+    REG_BOT_PPU(PPU_OFF_TIMING_08) = BOT_TIMING_08;
+    REG_BOT_PPU(PPU_OFF_TIMING_0C) = BOT_TIMING_0C;
+    REG_BOT_PPU(PPU_OFF_TIMING_10) = BOT_TIMING_10;
+    REG_BOT_PPU(PPU_OFF_TIMING_14) = BOT_TIMING_14;
+    REG_BOT_PPU(PPU_OFF_TIMING_18) = BOT_TIMING_18;
+    REG_BOT_PPU(PPU_OFF_TIMING_1C) = BOT_TIMING_1C;
+    REG_BOT_PPU(PPU_OFF_TIMING_20) = BOT_TIMING_20;
+    REG_BOT_PPU(PPU_OFF_TIMING_24) = BOT_TIMING_24;
+    REG_BOT_PPU(PPU_OFF_TIMING_28) = BOT_TIMING_28;
+    REG_BOT_PPU(PPU_OFF_TIMING_2C) = BOT_TIMING_2C;
+    REG_BOT_PPU(PPU_OFF_TIMING_30) = BOT_TIMING_30;
+    REG_BOT_PPU(PPU_OFF_TIMING_34) = BOT_TIMING_34;
+    REG_BOT_PPU(PPU_OFF_TIMING_38) = BOT_TIMING_38;
+    REG_BOT_PPU(PPU_OFF_TIMING_3C) = BOT_TIMING_3C;
+    REG_BOT_PPU(PPU_OFF_TIMING_40) = BOT_TIMING_40;
+    REG_BOT_PPU(PPU_OFF_TIMING_44) = BOT_TIMING_44;
+    REG_BOT_PPU(PPU_OFF_TIMING_48) = BOT_TIMING_48;
+    REG_BOT_PPU(PPU_OFF_CONFIG_5C) = BOT_CFG_5C;
+    REG_BOT_PPU(PPU_OFF_CONFIG_60) = BOT_CFG_60;
+    REG_BOT_PPU(PPU_OFF_CONFIG_64) = BOT_CFG_64;
 
-    // Color LUT
-    *(vu32 *)0x10400580 = 0;
+    REG_BOT_FB_0        = (u32)fbs[0].bottom;
+    REG_BOT_FB_1        = (u32)fbs[1].bottom;
+    REG_BOT_FB_FORMAT   = LCD_FORMAT_BOT;
+    REG_BOT_PPU(PPU_OFF_CONFIG_74) = PPU_BURST_CONFIG;
+    REG_BOT_FB_SELECT   = 0;
+    REG_BOT_STRIDE      = LCD_STRIDE_VALUE;
+    REG_BOT_PPU(PPU_OFF_CONFIG_9C) = 0x00000000;
+
+    // Bottom Color LUT
+    REG_BOT_LUT_CNT = 0;
     for(u32 i = 0; i < 256; i++)
-        *(vu32 *)0x10400584 = 0x10101 * i;
+        REG_BOT_LUT_DATA = 0x10101 * i;
 
-    *(vu32 *)0x10202204 = 0x00000000; //unset LCD fill
-    *(vu32 *)0x10202A04 = 0x00000000;
+    REG_LCD_FILL_TOP = LCD_FILL_UNSET;
+    REG_LCD_FILL_BOTTOM = LCD_FILL_UNSET;
 }
 
 static void setupFramebuffers(struct fb *fbs)
 {
-    *(vu32 *)0x10202204 = 0x01000000; //set LCD fill black to hide potential garbage -- NFIRM does it before firmlaunching
-    *(vu32 *)0x10202A04 = 0x01000000;
+    REG_LCD_FILL_TOP = LCD_FILL_BLACK;
+    REG_LCD_FILL_BOTTOM = LCD_FILL_BLACK;
 
-    *(vu32 *)0x10400468 = (u32)fbs[0].top_left;
-    *(vu32 *)0x1040046c = (u32)fbs[1].top_left;
-    *(vu32 *)0x10400494 = (u32)fbs[0].top_right;
-    *(vu32 *)0x10400498 = (u32)fbs[1].top_right;
-    *(vu32 *)0x10400568 = (u32)fbs[0].bottom;
-    *(vu32 *)0x1040056c = (u32)fbs[1].bottom;
+    REG_TOP_FB_LEFT_0  = (u32)fbs[0].top_left;
+    REG_TOP_FB_LEFT_1  = (u32)fbs[1].top_left;
+    REG_TOP_FB_RIGHT_0 = (u32)fbs[0].top_right;
+    REG_TOP_FB_RIGHT_1 = (u32)fbs[1].top_right;
+    REG_BOT_FB_0       = (u32)fbs[0].bottom;
+    REG_BOT_FB_1       = (u32)fbs[1].bottom;
 
-    //Set framebuffer format, framebuffer select and stride
-    *(vu32 *)0x10400470 = 0x80341;
-    *(vu32 *)0x10400478 = 0;
-    *(vu32 *)0x10400490 = 0x2D0;
-    *(vu32 *)0x10400570 = 0x80301;
-    *(vu32 *)0x10400578 = 0;
-    *(vu32 *)0x10400590 = 0x2D0;
+    REG_TOP_FB_FORMAT  = LCD_FORMAT_TOP;
+    REG_TOP_FB_SELECT  = 0;
+    REG_TOP_STRIDE     = LCD_STRIDE_VALUE;
+    REG_BOT_FB_FORMAT  = LCD_FORMAT_BOT;
+    REG_BOT_FB_SELECT  = 0;
+    REG_BOT_STRIDE     = LCD_STRIDE_VALUE;
 
-    *(vu32 *)0x10202204 = 0x00000000; //unset LCD fill
-    *(vu32 *)0x10202A04 = 0x00000000;
+    REG_LCD_FILL_TOP = LCD_FILL_UNSET;
+    REG_LCD_FILL_BOTTOM = LCD_FILL_UNSET;
 }
 
 static void clearScreens(struct fb *fb)
 {
-    //Setting up two simultaneous memory fills using the GPU
-
     vu32 *REGs_PSC0 = (vu32 *)0x10400010,
          *REGs_PSC1 = (vu32 *)0x10400020;
 
-    REGs_PSC0[0] = (u32)fb->top_left >> 3; //Start address
-    REGs_PSC0[1] = (u32)(fb->top_left + SCREEN_TOP_FBSIZE) >> 3; //End address
-    REGs_PSC0[2] = 0; //Fill value
-    REGs_PSC0[3] = (2 << 8) | 1; //32-bit pattern; start
+    REGs_PSC0[0] = (u32)fb->top_left >> 3;
+    REGs_PSC0[1] = (u32)(fb->top_left + SCREEN_TOP_FBSIZE) >> 3;
+    REGs_PSC0[2] = 0;
+    REGs_PSC0[3] = (2 << 8) | 1;
 
-    REGs_PSC1[0] = (u32)fb->bottom >> 3; //Start address
-    REGs_PSC1[1] = (u32)(fb->bottom + SCREEN_BOTTOM_FBSIZE) >> 3; //End address
-    REGs_PSC1[2] = 0; //Fill value
-    REGs_PSC1[3] = (2 << 8) | 1; //32-bit pattern; start
+    REGs_PSC1[0] = (u32)fb->bottom >> 3;
+    REGs_PSC1[1] = (u32)(fb->bottom + SCREEN_BOTTOM_FBSIZE) >> 3;
+    REGs_PSC1[2] = 0;
+    REGs_PSC1[3] = (2 << 8) | 1;
 
     while(!((REGs_PSC0[3] & 2) && (REGs_PSC1[3] & 2)));
 }
@@ -176,44 +175,33 @@ static void clearScreens(struct fb *fb)
 static void swapFramebuffers(bool isAlternate)
 {
     u32 isAlternateTmp = isAlternate ? 1 : 0;
-    *(vu32 *)0x10400478 = (*(vu32 *)0x10400478 & 0xFFFFFFFE) | isAlternateTmp;
-    *(vu32 *)0x10400578 = (*(vu32 *)0x10400578 & 0xFFFFFFFE) | isAlternateTmp;
+    REG_TOP_FB_SELECT = (REG_TOP_FB_SELECT & 0xFFFFFFFE) | isAlternateTmp;
+    REG_BOT_FB_SELECT = (REG_BOT_FB_SELECT & 0xFFFFFFFE) | isAlternateTmp;
 }
 
 static void updateBrightness(u32 brightnessLevel)
 {
-    //Change brightness
-    *(vu32 *)0x10202240 = brightnessLevel;
-    *(vu32 *)0x10202A40 = brightnessLevel;
+    REG_BL_BRIGHTNESS_TOP = brightnessLevel;
+    REG_BL_BRIGHTNESS_BOT = brightnessLevel;
 }
 
 static void deinitScreens(void)
 {
-    //Shutdown LCDs
-    *(vu32 *)0x10202A44 = 0;
-    *(vu32 *)0x10202244 = 0;
-    *(vu32 *)0x10202014 = 0;
+    REG_BACKLIGHT_BOT = 0;
+    REG_BACKLIGHT_TOP = 0;
+    REG_MASTER_LCD = MASTER_LCD_DISABLE;
 }
 
 static void zerofillN3dsAblRegisters(void)
 {
-    // It should be fine to write to these regs even on O3DS as they
-    // are RAZ/WI
-
-    // TODO: read from calibration, but null values should do just
-    // fine. From testing, LUT explicitly ignores null values, and
-    // it is probably the case of reg @ 0x54 as well.
-    *(vu32 *)0x10202250 = 0; // unknown 24-bit value, seen: 0
-    *(vu32 *)0x10202254 = 0; // unknown 24-bit value, seen: nonzero
-
-    *(vu32 *)0x10202A50 = 0; // unknown 24-bit value, seen: 0
-    *(vu32 *)0x10202A54 = 0; // unknown 24-bit value, seen: nonzero
+    REG_ABL_TOP_250 = 0;
+    REG_ABL_TOP_254 = 0;
+    REG_ABL_BOT_250 = 0;
+    REG_ABL_BOT_254 = 0;
 
     for (u32 i = 0; i < 64; i++) {
-        // Blend colors (w/ color multiplication) for each group
-        // of 4 relative-luminance Rs
-        *(vu32 *)(0x10202300 + 4*i) = 0;
-        *(vu32 *)(0x10202B00 + 4*i) = 0;
+        REG_ABL_BLEND_TOP(i) = 0;
+        REG_ABL_BLEND_BOT(i) = 0;
     }
 }
 

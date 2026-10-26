@@ -13,5 +13,9 @@ Modified from Luma3DS:
   arm9/linker.ld                   (removed exception-handler/emuNAND entries; wildcard object names)
   arm9/source/screen.c/.h, draw.c/.h, fatfs/diskio.c
                                    (config/splash/CTRNAND dependencies removed)
+  arm11/source/main.c
+                                   (Made hardware register addresses macros via #define, and made main.c human-readable.)
+  arm11/source/memory.c
+                                   (Optimized memory by, instead of copying byte-by-byte, instead copying 4 byte words at a time)
 New in this project:
-  arm9/source/main.c, fs.c, fs.h, firm.h, launcher_config.h, crt_stubs.c, Makefile
+  arm9/source/main.c, fs.c, fs.h, firm.h, launcher_config.h, crt_stubs.c, Makefile, arm11/source/hw_registers.h

@@ -28,29 +28,71 @@
 *   memcpy adapted from https://github.com/mid-kid/CakesForeveryWan/blob/557a8e8605ab3ee173af6497486e8f22c261d0e2/source/memfuncs.c
 */
 
+/*
+ * Optimized it a bit from the original,
+ * Instead of copying 1 byte at a time (like it used to), we can check if the memory addresses are 4-byte aligned.
+ * If they are, we can copy 4 bytes (a 32-bit word) at a time, and only fall back to byte-copying for any odd remaining bytes at the end.
+ */
+
 #include "memory.h"
+#include "types.h"
 
 void memcpy(void *dest, const void *src, u32 size)
 {
-    u8 *destc = (u8 *)dest;
-    const u8 *srcc = (const u8 *)src;
+    u8 *d = (u8 *)dest;
+    const u8 *s = (const u8 *)src;
 
-    for(u32 i = 0; i < size; i++)
-        destc[i] = srcc[i];
+    // If pointers are 4-byte aligned and we have enough bytes, copy by 32-bit words
+    if ((((u32)d | (u32)s) & 3) == 0 && size >= 4) {
+        u32 *d32 = (u32 *)d;
+        const u32 *s32 = (const u32 *)s;
+        u32 words = size / 4;
+
+        for (u32 i = 0; i < words; i++) {
+            d32[i] = s32[i];
+        }
+
+        d += words * 4;
+        s += words * 4;
+        size %= 4;
+    }
+
+    // Copy any remaining tail bytes
+    while (size--) {
+        *d++ = *s++;
+    }
 }
 
 void memset(void *dest, u32 filler, u32 size)
 {
-    u8 *destc = (u8 *)dest;
+    u8 *d = (u8 *)dest;
+    u8 val = (u8)filler;
 
-    for(u32 i = 0; i < size; i++)
-        destc[i] = (u8)filler;
+    // If aligned, replicate the byte across a 32-bit word and fill 4 bytes at a time
+    if (((u32)d & 3) == 0 && size >= 4) {
+        u32 val32 = val | (val << 8) | (val << 16) | (val << 24);
+        u32 *d32 = (u32 *)d;
+        u32 words = size / 4;
+
+        for (u32 i = 0; i < words; i++) {
+            d32[i] = val32;
+        }
+
+        d += words * 4;
+        size %= 4;
+    }
+
+    // Fill remaining tail bytes
+    while (size--) {
+        *d++ = val;
+    }
 }
 
 void memset32(void *dest, u32 filler, u32 size)
 {
     u32 *dest32 = (u32 *)dest;
+    u32 words = size / 4;
 
-    for(u32 i = 0; i < size / 4; i++)
+    for(u32 i = 0; i < words; i++)
         dest32[i] = filler;
 }
