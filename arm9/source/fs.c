@@ -86,7 +86,7 @@ bool writeFileAtomic(const char *dir, const char *name, const void *data, u32 le
     f_unlink(fin);                       /* f_rename fails if the target exists */
     return f_rename(tmp, fin) == FR_OK;
 }
-bool fileDelete(const char *path)
+bool fileConsume(const char *path)
 {
     return f_unlink(path) == FR_OK;
 }

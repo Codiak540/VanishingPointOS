@@ -7,14 +7,14 @@ A9_ARCH  := -marm -march=armv5te -mtune=arm946e-s
 A9_FLAGS := -g -std=gnu11 -Wall -Wextra -O2 -mword-relocations -fomit-frame-pointer \
             -ffunction-sections -fdata-sections -Wno-main -Wno-array-bounds \
             -Wno-stringop-overflow -Wno-stringop-overread $(A9_ARCH) -DARM9 -D__3DS__ \
-            -Iarm9/source
+            -Iarm9/source -MMD -MP
 A9_SRC   := $(wildcard arm9/source/*.c arm9/source/fatfs/*.c arm9/source/fatfs/sdmmc/*.c) \
             $(wildcard arm9/source/*.s arm9/source/fatfs/sdmmc/*.s)
 # object names must be bare (chainloader.o, i2c.o ...): Luma's linker script matches on them
 A9_OBJ   := $(addprefix build/arm9/,$(addsuffix .o,$(basename $(notdir $(A9_SRC)))))
 
 A11_ARCH  := -marm -march=armv6k -mtune=mpcore -mfloat-abi=soft
-A11_FLAGS := -g -std=gnu11 -Wall -Wextra -O2 -mword-relocations -fomit-frame-pointer \
+A11_FLAGS := -MMD -MP -g -std=gnu11 -Wall -Wextra -O2 -mword-relocations -fomit-frame-pointer \
              -ffunction-sections -fdata-sections -Wno-main -fno-builtin $(A11_ARCH) \
              -DARM11 -D__3DS__
 A11_SRC   := $(wildcard arm11/source/*.c arm11/source/*.s)
@@ -50,6 +50,9 @@ $(foreach f,$(filter %.c,$(A9_SRC)),$(eval $(call A9_RULE,$(f),FLAGS)))
 $(foreach f,$(filter %.s,$(A9_SRC)),$(eval $(call A9_RULE,$(f),SFLAGS)))
 $(foreach f,$(filter %.c,$(A11_SRC)),$(eval $(call A11_RULE,$(f),FLAGS)))
 $(foreach f,$(filter %.s,$(A11_SRC)),$(eval $(call A11_RULE,$(f),SFLAGS)))
+
+# Rebuild objects when a header they include changes (.d files come from -MMD).
+-include $(A9_OBJ:.o=.d) $(A11_OBJ:.o=.d)
 
 clean:
 	rm -rf build *.elf boot.firm
